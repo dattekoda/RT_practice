@@ -1,10 +1,10 @@
 #include "ray.h"
 #include "libft.h"
 
-void	set_unit(t_vec *self, t_vec *_cpy)
-{
-	self->cpy(_cpy);
-}
+// void	set_unit(t_vec *self, const t_vec _cpy)
+// {
+// 	self->cpy(_cpy);
+// }
 
 t_ray	ray_init(void)
 {
