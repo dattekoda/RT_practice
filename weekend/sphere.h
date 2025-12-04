@@ -3,6 +3,7 @@
 
 # include "hittable.h"
 # include "vec3.h"
+# include "aabb.h"
 
 class sphere: public hittable {
 	public:
@@ -13,6 +14,7 @@ class sphere: public hittable {
 		virtual bool	hit(
 			const ray& r, double tmin, double tmax, hit_record& rec
 		) const ;
+		virtual bool bounding_box(double t0, double t1, aabb& box) const;
 	public:
 		point3					center;
 		double					radius;
@@ -51,6 +53,12 @@ bool	sphere::hit(
 		}
 	}
 	return false;
+}
+
+bool	sphere::bounding_box(double t0, double t1, aabb& output_box) const {
+	output_box = aabb(center - vec3(radius, radius, radius),
+			center + vec3(radius, radius, radius));
+	return true;
 }
 
 #endif
