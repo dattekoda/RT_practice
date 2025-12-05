@@ -1,20 +1,10 @@
 #include "rayt.h"
 
-int	main(void)
-{
-	int	nx = 200;
-	int	ny = 100;
-	std::unique_ptr<rayt::Image>	image(std::make_unique<rayt::Image>(nx, ny));
+int	main(void) {
+	int	nx = 800;
+	int	ny = 400;
 
-	for (int j = 0; j<ny; ++j) {
-		std::cerr << "Rendering (y = " << j << ") " << (100.0 * j / (ny - 1)) << "%" << std::endl;
-		for (int i = 0; i<nx; ++i) {
-			float	r = float(i) / float(nx);
-			float	g = float(j) / float(ny);
-			float	b = 0.5f;
-			image->write(i, j, r, g, b);
-		}
-	}
-	stbi_write_bmp("render.bmp", nx, ny, sizeof(rayt::Image::rgb), image->pixels());
+	std::unique_ptr<rayt::Scene> scene(std::make_unique<rayt::Scene>(nx, ny));
+	scene->render();
 	return 0;
 }
