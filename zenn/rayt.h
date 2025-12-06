@@ -2,7 +2,7 @@
 #include <iostream>
 #include <vector>
 #include <float.h>
-
+#include <random>
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 
@@ -23,7 +23,6 @@ typedef simd_float3 col3;
 #define EPSILON 1e-6f
 #define GAMMA_FACTOR 2.2f
 
-#include <random>
 inline float	pow2(float x) { return x*x; }
 inline float	pow3(float x) { return x*x*x; }
 inline float	pow4(float x) { return x*x*x*x; }
@@ -47,6 +46,54 @@ namespace rayt {
 		return float(((double)(rand()) / (RAND_MAX)));
 	}
 
+	inline vec3	random_vector() {
+		return	simd_make_float3(drand48(), drand48(), drand48());
+	}
+
+	inline vec3	random_in_unit_sphere() {
+		vec3	p;
+
+		while (1) {
+			p = 2.0f * random_vector() - simd_unit(1.f);
+			if (simd_length_squared(p) < 1.0f)
+				break ;
+		}
+		return p;
+	}
+
+	inline	vec3	linear_to_gamma(const vec3& v, float gammaFactor) {
+		float	recipGammaFactor = recip(gammaFactor);
+		return simd_make_float3(
+				powf(v.x, recipGammaFactor),
+				powf(v.y, recipGammaFactor),
+				powf(v.z, recipGammaFactor));
+	}
+	
+	inline	vec3	gamma_to_linear(const vec3& v, float gammaFactor) {
+		return simd_make_float3(
+				powf(v.x, gammaFactor),
+				powf(v.y, gammaFactor),
+				powf(v.z, gammaFactor));
+	}
+
+	class	ImageFilter {
+		public:
+			virtual vec3	filter(const vec3& c) const = 0;
+	};
+
+	class	GammaFilter : public ImageFilter {
+		public:
+			GammaFilter(float factor) : m_factor(factor) {}
+			virtual vec3	filter(const vec3& c) const override {
+				return linear_to_gamma(c, m_factor);
+			}
+		private:
+			float	m_factor;
+	};
+
+	class	Material;
+	typedef	std::shared_ptr<Material>	MaterialPtr;
+
 	class	Image {
 		public:
 			struct rgb {
@@ -60,6 +107,7 @@ namespace rayt {
 				m_width = w;
 				m_height = h;
 				m_pixels.reset(new rgb[m_width*m_height]);
+				m_filters.push_back(std::make_unique<GammaFilter>(GAMMA_FACTOR));
 			}
 
 			int	width() const { return m_width; }
@@ -67,17 +115,23 @@ namespace rayt {
 			void	*pixels() const { return m_pixels.get(); }
 
 			void	write(int x, int y, float r, float g, float b) {
+				vec3	c = simd_make_float3(r, g, b);
+				for (auto& f : m_filters) {
+					c = f->filter(c);
+				}
 				int	index = m_width*y + x;
-				m_pixels[index].r = static_cast<unsigned char>(r*255.99f);
-				m_pixels[index].g = static_cast<unsigned char>(g*255.99f);
-				m_pixels[index].b = static_cast<unsigned char>(b*255.99f);
+				m_pixels[index].r = static_cast<unsigned char>(c.x*255.99f);
+				m_pixels[index].g = static_cast<unsigned char>(c.y*255.99f);
+				m_pixels[index].b = static_cast<unsigned char>(c.z*255.99f);
 			}
 
 		private:
 			int	m_width;
 			int	m_height;
 			std::unique_ptr<rgb[]>	m_pixels;
+			std::vector< std::unique_ptr<ImageFilter> > m_filters;
 	};
+
 	class Ray {
 		public:
 			Ray() {}
@@ -97,18 +151,65 @@ namespace rayt {
 			float	t;
 			vec3	p;
 			vec3	n;
+			MaterialPtr	mat;
 	};
 	
 	class	Shape {
 		public:
 			virtual bool	hit(const Ray& r, float t0, float t1, HitRec& hrec) const = 0;
 	};
-	
+
+	class	ScatterRec {
+		public:
+			Ray	ray; // 散乱後の新しい光線
+			vec3	albedo; // 反射率
+	};
+
+	class	Material {
+		public:
+			virtual bool	scatter(const Ray& r, const HitRec& hrec, ScatterRec& srec) const = 0; 
+	};
+
+	class	Lambertian : public Material {
+		public:
+			Lambertian(const vec3& c)
+				: m_albedo(c) {}
+
+			virtual bool	scatter(const Ray& r, const HitRec& hrec, ScatterRec& srec) const override {
+				vec3	target = hrec.p + hrec.n + random_in_unit_sphere();
+				srec.ray = Ray(hrec.p, target - hrec.p);
+				srec.albedo = m_albedo;
+				return true;
+			};
+		private:
+			vec3	m_albedo;
+	};
+
+	inline vec3	reflect(const vec3& v, const vec3& n) {
+		return v - 2.f * simd_dot(v, n)*n;
+	}
+
+	class	Metal : public Material {
+		public:
+			Metal(const vec3& c, float fuzz)
+				: m_albedo(c), m_fuzz(fuzz) {}
+			virtual bool	scatter(const Ray& r, const HitRec& hrec, ScatterRec& srec) const override {
+				vec3	reflected = reflect(simd_normalize(r.direction()), hrec.n);
+				reflected += m_fuzz*random_in_unit_sphere();
+				srec.ray = Ray(hrec.p, reflected);
+				srec.albedo = m_albedo;
+				return simd_dot(srec.ray.direction(), hrec.n) > 0;
+			}
+		private:
+			vec3	m_albedo;
+			float	m_fuzz;
+	};
+
 	class Sphere : public Shape {
 		public:
 			Sphere() {}
-			Sphere(const vec3& c, float r)
-				: m_center(c) ,m_radius(r) {}
+			Sphere(const vec3& c, float r, const MaterialPtr& mat)
+				: m_center(c), m_radius(r), m_material(mat) {}
 			
 			virtual bool	hit(const Ray& r, float t0, float t1, HitRec& hrec) const override {
 				vec3	oc = r.origin() - m_center;
@@ -124,6 +225,7 @@ namespace rayt {
 						hrec.t = temp;
 						hrec.p = r.at(hrec.t);
 						hrec.n = (hrec.p - m_center) / m_radius;
+						hrec.mat = m_material;
 						return true;
 					}
 					temp = (-b + root) / (2.0f*a);
@@ -131,6 +233,7 @@ namespace rayt {
 						hrec.t = temp;
 						hrec.p = r.at(hrec.t);
 						hrec.n = (hrec.p - m_center) / m_radius;
+						hrec.mat = m_material;
 						return true;
 					}
 				}
@@ -139,7 +242,57 @@ namespace rayt {
 		private:
 			vec3	m_center;
 			float	m_radius;
+			MaterialPtr	m_material;
 	};
+
+	class Cylinder : public Shape {
+		public:
+			Cylinder() {}
+			Cylinder(const vec3& c, const vec3& n, float d, float h, const MaterialPtr& mat) 
+			: m_center(c), m_normal(n), m_diameter(d), m_height(h), m_material(mat) {}
+
+			virtual bool	hit(const Ray& r, float t0, float t1, HitRec& hrec) const override {
+			vec3	A = simd_cross(r.direction(), m_normal);
+			vec3	B = simd_cross(r.origin() - m_center, m_normal);
+			float	a = simd_dot(A, A);
+			float	b = simd_dot(A, B);
+			float	c = simd_dot(B, B) - pow2(m_diameter);
+
+			float	D = pow2(b) - a*c;
+
+			if (D > 0) {
+				float	root = sqrtf(D);
+				float	temp = (-b - root) / a;
+				if (temp < t1 && t0 < temp) {
+					hrec.t = temp;
+					hrec.p = r.at(hrec.t);
+					vec3	w = hrec.p - m_center;
+					float	h = simd_dot(w, m_normal);
+					hrec.n = simd_normalize(hrec.p - m_center - h * m_normal);
+					hrec.mat = m_material;
+					return true;
+				}
+				temp = (-b + root) / a;
+				if (temp < t1 && t0 < temp) {
+					hrec.t = temp;
+					hrec.p = r.at(hrec.t);
+					vec3	w = hrec.p - m_center;
+					float	h = simd_dot(w, m_normal);
+					hrec.n = hrec.p - m_center - h * m_normal;
+					hrec.mat = m_material;
+					return true;
+				}
+			}
+			return false;
+		}
+		private:
+			vec3	m_center;
+			vec3	m_normal;
+			float	m_diameter;
+			float	m_height;
+			MaterialPtr	m_material;
+	};
+			
 
 	typedef std::shared_ptr<Shape>	ShapePtr;
 
@@ -197,10 +350,11 @@ namespace rayt {
 			vec3	m_origin; // 位置
 			vec3	m_uvw[3]; // 直交基底ベクトル
 	};
+
 	class Scene {
 		public:
-			Scene(int width, int height)
-				:m_image(std::make_unique<Image>(width, height)), m_backColor(0.2f) {}
+			Scene(int width, int height, int samples)
+				:m_image(std::make_unique<Image>(width, height)), m_backColor(0.2f), m_samples(samples) {}
 			
 			void	build() {
 				vec3	w = simd_make_float3(-2.0f, -1.0f, -1.0f);
@@ -208,30 +362,44 @@ namespace rayt {
 				vec3	v = simd_make_float3(0.0f, 2.0f, 0.0f);
 				m_camera = std::make_unique<Camera>(u, v, w);
 				ShapeList	*world = new ShapeList();
-				world->add(std::make_shared<Sphere>(simd_make_float3(0, 0, -1), 0.5f));
-				world->add(std::make_shared<Sphere>(simd_make_float3(0, -100.5, -1), 100));
+				world->add(std::make_shared<Sphere>(
+							simd_make_float3(-0.7, 0, -1), 0.3f, std::make_shared<Lambertian>(simd_make_float3(0.1f, 0.2f, 0.5f))));
+				// world->add(std::make_shared<Sphere>(simd_make_float3(0, -100.5, -1), 100, std::make_shared<Lambertian>(simd_make_float3(0.8f, 0.8f, 0.0f))));
+				world->add(std::make_shared<Cylinder>(simd_make_float3(0, 0, -1), simd_normalize(simd_make_float3(0, 1, 0)), 0.3, 4, std::make_shared<Metal>(simd_make_float3(0.8f, 0.8f, 0.8f), 0.0f)));
+				// world->add(std::make_shared<Sphere>(simd_make_float3(0.6, 0, -1), 0.5f, std::make_shared<Metal>(simd_make_float3(1.0f, 1.0f, 1.0f), 0.06125f)));
 				m_world.reset(world);
 			}
 
-			// vec3	color(const rayt::Ray& r) {
-			// 	vec3	c = simd_make_float3(0, 0, -1);
-			// 	float	t = hit_sphere(c, 0.5f, r);
+			// vec3	color(const rayt::Ray& r, const Shape *world, int depth) {
+			// 	HitRec	hrec;
 			//
-			// 	if (0.0f < t) {
-			// 		vec3	light = simd_normalize(simd_make_float3(-3, 3, 3) - c);
-			// 		vec3	N = simd_normalize(r.at(t) - c);
-			// 		float	Brightness = std::max(simd_dot(light, N), 0.0f);
+			// 	if (depth <= 0)
+			// 		return simd_unit(0.0f);
+			//
+			// 	if (world->hit(r, 0.001f, FLT_MAX, hrec)) {
+			// 		vec3	light = simd_normalize(simd_make_float3(-3, 3, 3) - hrec.p);
+			//
+			// 		vec3	target = hrec.p + hrec.n + random_in_unit_sphere();
+			// 		float	Brightness = std::max(simd_dot(light, target), 0.0f);
 			// 		float	ambient = 0.1f;
-			// 		vec3	base_color = simd_make_float3(1.0f, 0.0f, 0.0f);
-			// 		return base_color * std::min(Brightness + ambient, 1.0f);
+			// 		return std::min(Brightness + ambient, 1.0f) * color(Ray(hrec.p, target - hrec.p), world, depth - 1);
 			// 	}
 			// 	return backgroundSky(r.direction());
 			// }
-			vec3 color(const rayt::Ray& r, const Shape* world) {
+			vec3	color(const rayt::Ray& r, const Shape* world, int depth) {
 				HitRec	hrec;
 
-				if (world->hit(r, 0, FLT_MAX, hrec))
-					return 0.5f*(hrec.n + simd_unit(1.0f));
+				if (depth <= 0)
+					return simd_unit(0.0f);
+
+				if (world->hit(r, 0.001f, FLT_MAX, hrec)) {
+					ScatterRec	srec;
+					if (hrec.mat->scatter(r, hrec, srec)) {
+						return srec.albedo * color(srec.ray, world, depth - 1);
+					} else {
+						return simd_unit(0.0f);
+					}
+				}
 				return backgroundSky(r.direction());
 			}
 
@@ -254,11 +422,15 @@ namespace rayt {
 				for (int j = 0; j<ny; j++) {
 					// std::cerr << "Rendering (y = " << j << ") " << (100.0 * j / (ny - 1)) << "%" << std::endl;
 					for (int i = 0; i<nx; i++) {
-						float	u = float(i + drand48()) / float(nx);
-						float	v = float(j + drand48()) / float(ny);
-						Ray	r = m_camera->getRay(u, v);
-						vec3	c = color(r, m_world.get());
-						// .get()はunique_ptrで管理しているオブジェクトのアドレスを渡す所有権は渡さずデータを参照したいときに使われる
+						vec3	c = simd_unit(0.0f);
+						for (int s = 0; s<m_samples; s++) {
+							float	u = float(i + drand48()) / float(nx);
+							float	v = float(j + drand48()) / float(ny);
+							Ray	r = m_camera->getRay(u, v);
+							c = c + color(r, m_world.get(), 50);
+							// .get()はunique_ptrで管理しているオブジェクトのアドレスを渡す所有権は渡さずデータを参照したいときに使われる
+						}
+						c = c / m_samples;
 						m_image->write(i, (ny - j - 1), c.x, c.y, c.z);
 					}
 				}
@@ -269,6 +441,7 @@ namespace rayt {
 		std::unique_ptr<Image>	m_image;
 		std::unique_ptr<Shape>	m_world;
 		vec3			m_backColor;
+		int			m_samples;
 	};
 
 }
