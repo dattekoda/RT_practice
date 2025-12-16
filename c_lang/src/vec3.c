@@ -1,6 +1,7 @@
 #include "vec3.h"
+#include "rt_utils.h"
 #include <math.h>
-
+#include <stddef.h>
 
 t_vec3	construct_vec(double _x, double _y, double _z)
 {
@@ -53,14 +54,9 @@ t_vec3	scal_mul_vec(double lhs, t_vec3 rhs)
 	));
 }
 
-static double pow2(double a)
-{
-	return ((a) * (a));
-}
-
 double	length_squared_vec(t_vec3 vec)
 {
-	return (pow2(vec.x) + pow2(vec.y) + pow2(vec.z));
+	return (dot(vec, vec));
 }
 
 double	length_vec(t_vec3 vec)
@@ -89,13 +85,26 @@ t_vec3	normalize(t_vec3 vec)
 	return (scal_mul_vec(1 / length_vec(vec), vec));
 }
 
-double	axis_vec(t_vec3 vec, int axis)
+double	*axis_vec(t_vec3 *vec, int axis)
 {
 	if (axis == 0)
-		return (vec.x);
+		return (&vec->x);
 	if (axis == 1)
-		return (vec.y);
+		return (&vec->y);
 	if (axis == 2)
-		return (vec.z);
-	return (NAN);
+		return (&vec->z);
+	return (NULL);
+}
+
+t_vec3	constant_vec(double d)
+{
+	return (construct_vec(d, d, d));
+}
+
+t_vec3	map_vec(t_vec3 vec, double (*f)(double))
+{
+	vec.x = f(vec.x);
+	vec.y = f(vec.y);
+	vec.z = f(vec.z);
+	return (vec);
 }

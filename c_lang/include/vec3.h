@@ -19,8 +19,10 @@ double	length_vec(t_vec3 vec);
 double	dot(t_vec3 lhs, t_vec3 rhs);
 t_vec3	cross(t_vec3 lhs, t_vec3 rhs);
 t_vec3	normalize(t_vec3 vec);
-double	axis_vec(t_vec3 vec, int axis);
+double	*axis_vec(t_vec3 *vec, int axis);
 // t_vec3	random_vec(double min, double max);
+t_vec3	constant_vec(double d);
+t_vec3	map_vec(t_vec3 vec, double (*f)(double));
 
 typedef t_vec3	t_point3;
 

@@ -6,7 +6,8 @@
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/include",
                 "${workspaceFolder}/include",
-                "${HOME}/minilibx"
+                "${HOME}/minilibx",
+				"${HOME}/cursus/0/libft/dattekoda/includes"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/clang",

@@ -17,11 +17,16 @@ void	initialize(t_hook_var *var, t_img *img)
 	return ;
 }
 
-int	main(void)
+int	main(int argc, char *argv[])
 {
 	t_hook_var	var;
 	t_img		img;
 
+	if (argc == 1)
+		return (perror("input err"), 1);
+	if (validate(argv[1]))
+		return (perror("validate err"), 1);
 	initialize(&var, &img);
 	draw(&var.mlx, &img);
+	return (0);
 }
