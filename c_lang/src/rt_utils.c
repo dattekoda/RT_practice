@@ -15,6 +15,8 @@ double	pow2(double a)
 	return ((a) * (a));
 }
 
+/*
+@brief spaceがなかった時false*/
 int	skip_spaces(char **ptr)
 {
 	if (**ptr != ' ' && **ptr != '\t')

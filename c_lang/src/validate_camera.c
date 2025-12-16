@@ -1,3 +1,5 @@
+#include "rt_utils.h"
+#include "libft.h"
 #include <stdlib.h>
 
 // You need to imprement new function
@@ -19,6 +21,20 @@ int	validate_camera(char *line_ptr)
 	}
 	if (skip_spaces(&line_ptr))
 		return (EXIT_FAILURE);
-	// カメラの方向ベクトルが正規化されているか
-	// 縦方向の視野角が0-180の範囲にあるか
+	i = 0;
+	d_tmp = 0;
+	while (i++ < 3)
+	{
+		d_tmp += ft_strtod(line_ptr, &line_ptr);
+		if (i != 3 && *(line_ptr++) != ',')
+			return (EXIT_FAILURE);
+	}
+	if (0.001 < d_tmp - 1)
+		return (EXIT_FAILURE);
+	if (skip_spaces(&line_ptr))
+		return (EXIT_FAILURE);
+	d_tmp = ft_strtod(line_ptr, &line_ptr);
+	if (d_tmp < 0.0f || 180.0f < d_tmp)
+		return (EXIT_FAILURE);
+	return (EXIT_SUCCESS);
 }

@@ -3,6 +3,8 @@
 #include <vector>
 #include <float.h>
 #include <random>
+#include <algorithm>
+
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 
@@ -41,6 +43,26 @@ inline simd_float3	simd_unit(float t) {
 }
 
 namespace rayt {
+
+	class	Texture {
+		public:
+			virtual vec3	value(float u, float v, const vec3& p) const = 0;
+	};
+
+	class	Texture;
+	typedef std::shared_ptr<Texture> TexturePtr;
+
+	class ColorTexture : public Texture {
+		public :
+			ColorTexture(const vec3& c)
+				: m_color(c) {}
+
+			virtual vec3	value(float u, float v, const vec3& p) const override {
+				return m_color;
+			}
+		private:
+			vec3	m_color;
+	};
 
 	inline float	drand48() {
 		return float(((double)(rand()) / (RAND_MAX)));
@@ -149,6 +171,8 @@ namespace rayt {
 	class	HitRec {
 		public:
 			float	t;
+			float	u;
+			float	v;
 			vec3	p;
 			vec3	n;
 			MaterialPtr	mat;
@@ -163,11 +187,14 @@ namespace rayt {
 		public:
 			Ray	ray; // 散乱後の新しい光線
 			vec3	albedo; // 反射率
+			float	pdf_value;
 	};
 
 	class	Material {
 		public:
 			virtual bool	scatter(const Ray& r, const HitRec& hrec, ScatterRec& srec) const = 0; 
+			virtual vec3	emitted(const Ray& r, const HitRec& hrec) const { return simd_unit(0.0f); }
+			virtual float	scattering_pdf(const Ray& r, const HitRec& hrec) const { return 0; }
 	};
 
 	class	Lambertian : public Material {
@@ -179,8 +206,13 @@ namespace rayt {
 				vec3	target = hrec.p + hrec.n + random_in_unit_sphere();
 				srec.ray = Ray(hrec.p, target - hrec.p);
 				srec.albedo = m_albedo;
+				srec.pdf_value = simd_dot(hrec.n, srec.ray.direction()) / PI;
 				return true;
 			};
+
+			virtual float	scattering_pdf(const Ray& r, const HitRec& hrec) const override {
+				return std::max(simd_dot(hrec.n, simd_normalize(r.direction())), 0.0f) / PI;
+			}
 		private:
 			vec3	m_albedo;
 	};
@@ -198,11 +230,28 @@ namespace rayt {
 				reflected += m_fuzz*random_in_unit_sphere();
 				srec.ray = Ray(hrec.p, reflected);
 				srec.albedo = m_albedo;
+				// srec.pdf_value = 
 				return simd_dot(srec.ray.direction(), hrec.n) > 0;
 			}
 		private:
 			vec3	m_albedo;
 			float	m_fuzz;
+	};
+
+	class DiffuseLight : public Material {
+		public:
+			DiffuseLight(const TexturePtr& emit)
+				: m_emit(emit) {}
+
+			virtual bool	scatter(const Ray& r, const HitRec& hrec, ScatterRec& srec) const override {
+				return false;
+			}
+
+			virtual vec3	emitted(const Ray& r, const HitRec& hrec) const override {
+				return m_emit->value(hrec.u, hrec.v, hrec.p);
+			}
+		private:
+			TexturePtr	m_emit;
 	};
 
 	class Sphere : public Shape {
@@ -248,22 +297,40 @@ namespace rayt {
 	class Cylinder : public Shape {
 		public:
 			Cylinder() {}
-			Cylinder(const vec3& c, const vec3& n, float d, float h, const MaterialPtr& mat) 
-			: m_center(c), m_normal(n), m_diameter(d), m_height(h), m_material(mat) {}
+			Cylinder(const vec3& c, const vec3& n, float r, float h, const MaterialPtr& mat) 
+			: m_center(c), m_normal(n), m_radius(r), m_height(h), m_material(mat) {}
 
 			virtual bool	hit(const Ray& r, float t0, float t1, HitRec& hrec) const override {
 			vec3	A = simd_cross(r.direction(), m_normal);
-			vec3	B = simd_cross(r.origin() - m_center, m_normal);
+			vec3	P = r.origin() - m_center;
+			vec3	B = simd_cross(P, m_normal);
 			float	a = simd_dot(A, A);
 			float	b = simd_dot(A, B);
-			float	c = simd_dot(B, B) - pow2(m_diameter);
+			float	c = simd_dot(B, B) - pow2(m_radius);
 
 			float	D = pow2(b) - a*c;
 
+			float	s = simd_dot(r.direction(), m_normal);	
+			float	t = simd_dot(P, m_normal);
+			bool	inside_height = false;
+			float	temp_max;
+			float	temp_min;
+			if (s > 0) {
+				temp_max = (m_height - t) / s;
+				temp_min = -t / s;
+			} else if (s < 0) {
+				temp_max = -t / s;
+				temp_min = (m_height - t) / s;
+			} else {
+				temp_max = FLT_MAX;
+				temp_min = -FLT_MAX;
+			}
 			if (D > 0) {
+				if (a == 0)
+					return false;
 				float	root = sqrtf(D);
 				float	temp = (-b - root) / a;
-				if (temp < t1 && t0 < temp) {
+				if (temp < t1 && t0 < temp && temp_min < temp && temp < temp_max) {
 					hrec.t = temp;
 					hrec.p = r.at(hrec.t);
 					vec3	w = hrec.p - m_center;
@@ -273,12 +340,12 @@ namespace rayt {
 					return true;
 				}
 				temp = (-b + root) / a;
-				if (temp < t1 && t0 < temp) {
+				if (temp < t1 && t0 < temp && temp_min < temp && temp < temp_max) {
 					hrec.t = temp;
 					hrec.p = r.at(hrec.t);
 					vec3	w = hrec.p - m_center;
 					float	h = simd_dot(w, m_normal);
-					hrec.n = hrec.p - m_center - h * m_normal;
+					hrec.n = simd_normalize(hrec.p - m_center - h * m_normal);
 					hrec.mat = m_material;
 					return true;
 				}
@@ -288,7 +355,7 @@ namespace rayt {
 		private:
 			vec3	m_center;
 			vec3	m_normal;
-			float	m_diameter;
+			float	m_radius;
 			float	m_height;
 			MaterialPtr	m_material;
 	};
@@ -321,6 +388,7 @@ namespace rayt {
 		private:
 			std::vector<ShapePtr>	m_list;
 	};
+
 	class Camera {
 		public:
 			Camera() {}
@@ -362,10 +430,10 @@ namespace rayt {
 				vec3	v = simd_make_float3(0.0f, 2.0f, 0.0f);
 				m_camera = std::make_unique<Camera>(u, v, w);
 				ShapeList	*world = new ShapeList();
-				world->add(std::make_shared<Sphere>(
-							simd_make_float3(-0.7, 0, -1), 0.3f, std::make_shared<Lambertian>(simd_make_float3(0.1f, 0.2f, 0.5f))));
-				// world->add(std::make_shared<Sphere>(simd_make_float3(0, -100.5, -1), 100, std::make_shared<Lambertian>(simd_make_float3(0.8f, 0.8f, 0.0f))));
-				world->add(std::make_shared<Cylinder>(simd_make_float3(0, 0, -1), simd_normalize(simd_make_float3(0, 1, 0)), 0.3, 4, std::make_shared<Metal>(simd_make_float3(0.8f, 0.8f, 0.8f), 0.0f)));
+				// world->add(std::make_shared<Sphere>(simd_make_float3(-0.7, 0, -1), 0.3f, std::make_shared<Lambertian>(simd_make_float3(0.1f, 0.2f, 0.5f))));
+				world->add(std::make_shared<Sphere>(simd_make_float3(0, -100.5, -1), 100, std::make_shared<Lambertian>(simd_make_float3(0.8f, 0.8f, 0.8f))));
+				world->add(std::make_shared<Cylinder>(simd_make_float3(0, 0, -1), simd_normalize(simd_make_float3(0, 1, 0)), 0.3, 0.5, std::make_shared<Metal>(simd_make_float3(0.8f, 0.8f, 0.8f), 0.0f)));
+				world->add(std::make_shared<Sphere>(simd_make_float3(0, -0.2, -1), 0.3, std::make_shared<DiffuseLight>(std::make_shared<ColorTexture>(simd_unit(1.0f)))));
 				// world->add(std::make_shared<Sphere>(simd_make_float3(0.6, 0, -1), 0.5f, std::make_shared<Metal>(simd_make_float3(1.0f, 1.0f, 1.0f), 0.06125f)));
 				m_world.reset(world);
 			}
@@ -390,17 +458,19 @@ namespace rayt {
 				HitRec	hrec;
 
 				if (depth <= 0)
-					return simd_unit(0.0f);
-
+					return background(r.direction());
 				if (world->hit(r, 0.001f, FLT_MAX, hrec)) {
+					vec3		emitted = hrec.mat->emitted(r, hrec); // 物体が光源だった場合はその光を加える
 					ScatterRec	srec;
-					if (hrec.mat->scatter(r, hrec, srec)) {
-						return srec.albedo * color(srec.ray, world, depth - 1);
+					if (hrec.mat->scatter(r, hrec, srec) && srec.pdf_value > 0) {
+						float	spdf_value = hrec.mat->scattering_pdf(srec.ray, hrec);
+						vec3	albedo = srec.albedo * spdf_value; // 物体の反射色
+						return emitted + albedo * color(srec.ray, world, depth - 1) / srec.pdf_value;
 					} else {
-						return simd_unit(0.0f);
+						return emitted;
 					}
 				}
-				return backgroundSky(r.direction());
+				return background(r.direction());
 			}
 
 			vec3	background(const vec3& d) const {
