@@ -19,7 +19,6 @@ int	validate_ambient(char *line)
 	int		tmp;
 	size_t	i;
 
-	line++;
 	if (skip_spaces(&line))
 		return (err_ambient(), EXIT_FAILURE);
 	lighting_ratio = ft_strtod(line, &line);

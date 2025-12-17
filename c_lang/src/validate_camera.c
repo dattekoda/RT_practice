@@ -25,7 +25,7 @@ int	validate_camera(char *line_ptr)
 	d_tmp = 0;
 	while (i++ < 3)
 	{
-		d_tmp += ft_strtod(line_ptr, &line_ptr);
+		d_tmp += pow2(ft_strtod(line_ptr, &line_ptr));
 		if (i != 3 && *(line_ptr++) != ',')
 			return (EXIT_FAILURE);
 	}

@@ -6,7 +6,7 @@
 
 #define BUFFER_SIZE 4096
 
-int	set_line_lst(t_list **line_lst, const char *file_name)
+int	read_rt(t_list **line_lst, const char *file_name)
 {
 	int		fd;
 	int		gnl_ret;
@@ -42,7 +42,7 @@ int	set_line_lst(t_list **line_lst, const char *file_name)
 
 // 	if (argc == 1)
 // 		return 1;
-// 	if (set_line_lst(&lst, argv[1]))
+// 	if (read_rt(&lst, argv[1]))
 // 		return (1);
 // 	head = lst;
 // 	while (lst) {
