@@ -2,6 +2,13 @@
 #include "libft.h"
 #include <stdlib.h>
 
+static double	double_abs(double a)
+{
+	if (a < 0.0f)
+		return (-a);
+	return (a);
+}
+
 static void	err_camera(void)
 {
 	static char	*msg = \
@@ -38,7 +45,7 @@ int	validate_camera(char *line)
 		if (i != 3 && *(line++) != ',')
 			return (err_camera(), EXIT_FAILURE);
 	}
-	if (0.001 < d_tmp - 1)
+	if (0.001 < double_abs(d_tmp - 1))
 		return (err_camera(), EXIT_FAILURE);
 	if (skip_spaces(&line))
 		return (err_camera(), EXIT_FAILURE);
