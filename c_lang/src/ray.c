@@ -14,7 +14,7 @@ t_ray	construct_ray(t_point3 _origin, t_vec3 _direct)
 	t_ray	ray;
 
 	ray.origin = _origin;
-	ray.direct = normalize(_direct);
+	ray.direct = _direct;
 	ray.at = at_ray;
 	return (ray);
 }
