@@ -46,7 +46,7 @@ static bool	hit_sphere(const void *s, const t_ray ray, t_hit_record *rec, t_t_ra
 	self = (const t_sphere *)s;
 	abc = calc_abc(self, ray);
 	discriminant = calc_discriminant(abc);
-	if (discriminant < 0)
+	if (0 < discriminant)
 	{
 		root = sqrt(discriminant);
 		solution = (-abc.y - root) / abc.x;
