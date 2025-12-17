@@ -12,6 +12,7 @@ typedef struct s_hook_var
 }	t_hook_var;
 
 void	draw(void **mlx, t_img *img);
+int		set_world(t_world *world, t_list *line_lst);
 
 // void	initialize(t_hook_var *var, t_img *img)
 // {
@@ -34,7 +35,7 @@ int	main(int argc, char *argv[])
 		return (EXIT_FAILURE);
 	if (validate(line_lst))
 		return (EXIT_FAILURE);
-	if (set_world(line_lst))
+	if (set_world(&world, line_lst))
 		return (EXIT_FAILURE);
 	// initialize(&var, &img);
 	// draw(&var.mlx, &img);

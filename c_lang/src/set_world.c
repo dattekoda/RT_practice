@@ -5,8 +5,20 @@
 
 int	set_objects(t_hit_node **tree, t_list *line_lst);
 static char	*get_word_line(t_list *line_lst, const char *word);
+static t_camera	set_camera(t_list *line_lst);
+static t_color	set_back_ground(t_list *line_lst);
 
-t_camera	set_camera(t_list *line_lst)
+int	set_world(t_world *world, t_list *line_lst)
+{
+	ft_bzero(world, sizeof(t_world));
+	world->camera = set_camera(line_lst);
+	world->back_ground = set_back_ground(line_lst);
+	if (set_objects(&world->object_tree, line_lst))
+		return (EXIT_FAILURE);
+	return (EXIT_SUCCESS);
+}
+
+static t_camera	set_camera(t_list *line_lst)
 {
 	char		*line;
 	t_point3	origin;
@@ -22,7 +34,7 @@ t_camera	set_camera(t_list *line_lst)
 	return (construct_camera(origin, direct, vfov));
 }
 
-t_color	set_back_ground(t_list *line_lst)
+static t_color	set_back_ground(t_list *line_lst)
 {
 	char	*line;
 	double	lighting_ratio;
@@ -35,16 +47,6 @@ t_color	set_back_ground(t_list *line_lst)
 	back_ground = scal_mul_vec(back_ground, lighting_ratio);
 	back_ground = construct_color(back_ground.x, back_ground.y, back_ground.z);
 	return (back_ground);
-}
-
-int	set_world(t_world *world, t_list *line_lst)
-{
-	ft_bzero(world, sizeof(t_world));
-	world->camera = set_camera(line_lst);
-	world->back_ground = set_back_ground(line_lst);
-	if (set_objects(&world->object_tree, line_lst))
-		return (EXIT_FAILURE);
-	return (EXIT_SUCCESS);
 }
 
 /*
