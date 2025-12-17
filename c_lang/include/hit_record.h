@@ -1,9 +1,10 @@
 #ifndef HIT_RECORD_H
 # define HIT_RECORD_H
 
-# include "material.h"
 # include "ray.h"
 # include "vec3.h"
+
+typedef struct s_material t_material;
 
 /*
 @brief hitした情報を保存する構造体
