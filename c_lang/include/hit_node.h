@@ -10,9 +10,10 @@ typedef struct s_hit_node t_hit_node;
 */
 struct s_hit_node
 {
-	t_hit_table		*data;
+	t_hit_table		data;
 	t_hit_node		*lhs;
 	t_hit_node		*rhs;
+	t_aabb			box;
 };
 
 #endif

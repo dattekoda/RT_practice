@@ -2,8 +2,8 @@
 
 // ジンバルロックのバグを孕む
 /*
-@param _w 正規化する必要なし
-@param _upper 正規化する必要あり
+@param _w 正規化不要
+@param _upper 正規化必要
 */
 t_onb	construct_w_onb(t_vec3 _w, t_vec3 upper)
 {

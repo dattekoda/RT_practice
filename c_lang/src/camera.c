@@ -25,15 +25,15 @@ t_camera	construct_camera(t_point3 _origin, t_vec3 _direct, double vfov)
 
 	onb = construct_w_onb(negative_vec(_direct), construct_vec(0, 1, 0));
 	camera.origin = _origin;
-	camera.horizontal = scal_mul_vec(screen_h, onb.u);
-	camera.vertical = scal_mul_vec(-screen_w, onb.v);
+	camera.horizontal = scal_mul_vec(onb.u, screen_h);
+	camera.vertical = scal_mul_vec(onb.v, -screen_w);
 	camera.higher_left_corner = \
 	sub_vec( \
 		sub_vec(\
 			negative_vec(onb.w), \
 			scal_mul_vec( \
-				0.5, \
-				add_vec(camera.horizontal, camera.vertical))), \
+				add_vec(camera.horizontal, camera.vertical), \
+				0.5)), \
 		camera.origin);
 	// -w -0.5 (horizontal + vertical) - origin
 	return (camera);

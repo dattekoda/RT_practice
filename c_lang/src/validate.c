@@ -25,6 +25,8 @@ static int	validate_distribute(char *line)
 	return (EXIT_FAILURE);
 }
 
+// もしカメラとambientがセットされていなかったらエラー
+// にするように要修正。
 int	validate(t_list *line_lst)
 {
 	char	*line_ptr;

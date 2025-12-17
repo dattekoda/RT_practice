@@ -6,7 +6,7 @@
 */
 t_point3	at_ray(const t_ray *self, double t)
 {
-	return (add_vec(scal_mul_vec(t, self->direct), self->origin));
+	return (add_vec(scal_mul_vec(self->direct, t), self->origin));
 }
 
 t_ray	construct_ray(t_point3 _origin, t_vec3 _direct)
@@ -26,8 +26,8 @@ t_ray	get_ray(const t_camera *camera, double u, double v)
 			sub_vec( \
 				add_vec( \
 					add_vec( \
-						scal_mul_vec(u, camera->horizontal), \
-						scal_mul_vec(v, camera->vertical)), \
+						scal_mul_vec(camera->horizontal, u), \
+						scal_mul_vec(camera->vertical, v)), \
 					camera->higher_left_corner), \
 				camera->origin
 	)));

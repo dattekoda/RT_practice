@@ -5,6 +5,14 @@
 #include <math.h>
 #include <stdlib.h>
 
+static bool	bounding_sphere(const t_sphere *self, t_range range, t_aabb *output_box)
+{
+	(void)range;
+	*output_box = construct_aabb(sub_vec(self->center, constant_vec(self->radius)), \
+							add_vec(self->center, constant_vec(self->radius)));
+	return (true);
+}
+
 static t_abc	calc_abc(const t_sphere *self, const t_ray ray)
 {
 	t_abc	abc;
@@ -22,7 +30,7 @@ static bool	set_sphere_hitrec(const t_sphere *self, const t_ray ray, t_hit_recor
 	rec->ray_in = ray;
 	rec->t = solution;
 	rec->point = ray.at(&ray, rec->t);
-	rec->normal = scal_mul_vec(1 / self->radius, sub_vec(rec->point, self->center));
+	rec->normal = scal_mul_vec(sub_vec(rec->point, self->center), 1 / self->radius);
 	rec->mat_ptr = self->hit_table.mat_ptr;
 	return (true);
 }
@@ -59,6 +67,7 @@ t_sphere	construct_sphere(t_point3 _cen, double _rad, void *mat_ptr)
 	sphere.radius = _rad;
 	sphere.hit_table.mat_ptr = mat_ptr;
 	sphere.hit_table.hit = hit_sphere;
+	sphere.hit_table.bounding_box = bounding_sphere;
 	return (sphere);
 }
 

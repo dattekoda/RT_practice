@@ -2,6 +2,7 @@
 #include "define.h"
 #include "read_rt.h"
 #include "validate.h"
+#include "world.h"
 #include <stdio.h>
 
 typedef struct s_hook_var
@@ -25,12 +26,15 @@ int	main(int argc, char *argv[])
 	t_hook_var	var;
 	t_img		img;
 	t_list		*line_lst;
+	t_world		world;
 
 	if (argc == 1)
 		return (perror("input err"), EXIT_FAILURE);
 	if (read_rt(&line_lst, argv[1]))
 		return (EXIT_FAILURE);
 	if (validate(line_lst))
+		return (EXIT_FAILURE);
+	if (set_world(line_lst))
 		return (EXIT_FAILURE);
 	// initialize(&var, &img);
 	// draw(&var.mlx, &img);

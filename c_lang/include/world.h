@@ -4,11 +4,12 @@
 # include "camera.h"
 # include "color.h"
 # include "hit_node.h"
+# include "libft.h"
 
 typedef struct s_world {
 	t_camera	camera;
 	t_color		back_ground;
-	t_hit_node	objects;
+	t_hit_node	*object_tree;
 }	t_world;
 
 #endif
