@@ -28,13 +28,13 @@ t_camera	construct_camera(t_point3 _origin, t_vec3 _direct, double vfov)
 	camera.horizontal = scal_mul_vec(onb.u, screen_h);
 	camera.vertical = scal_mul_vec(onb.v, -screen_w);
 	camera.higher_left_corner = \
-	sub_vec( \
+	add_vec( \
 		sub_vec(\
 			negative_vec(onb.w), \
 			scal_mul_vec( \
 				add_vec(camera.horizontal, camera.vertical), \
 				0.5)), \
 		camera.origin);
-	// -w -0.5 (horizontal + vertical) - origin
+	// -w -0.5 (horizontal + vertical) + origin
 	return (camera);
 }
