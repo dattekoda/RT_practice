@@ -5,6 +5,14 @@
 # include "vec3.h"
 # include "material.h"
 
+/*
+@brief hitした情報を保存する構造体
+@param ray_in 入射したときのレイの情報
+@param point ヒットした点
+@param normal ヒットした点での法線ベクトル
+@param mat_ptr マテリアルの情報
+@param t 入射したレイのt情報
+*/
 typedef struct s_hit_record
 {
 	t_ray		ray_in;
