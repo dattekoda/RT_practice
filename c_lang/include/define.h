@@ -8,5 +8,5 @@
 #  define M_PI 3.14159265359
 # endif
 
-# define ASPECT_RATIO 0.133333333
+# define ASPECT_RATIO 1.333333333
 #endif
