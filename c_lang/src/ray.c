@@ -19,7 +19,7 @@ t_ray	construct_ray(t_point3 _origin, t_vec3 _direct)
 	return (ray);
 }
 
-// 配列にしたらもっと早くなるかも?
+// 配列へ保存しておくようにしたらもっと早くなるかも?
 t_ray	get_ray(const t_camera *camera, double u, double v)
 {
 	return (construct_ray(

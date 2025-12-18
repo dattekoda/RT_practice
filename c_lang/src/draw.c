@@ -7,10 +7,13 @@
 #include "mlx.h"
 #include "libft.h"
 #include <stdio.h>
+#include <math.h>
 
-void	initialize(t_hook_var *var, t_img *img);
+static t_color	accumulate_pixel_color(int x, int y, const t_world *world);
+static bool	killed_by_russian_roulette(t_color *attenuation);
+static t_color	ray_color(t_ray ray, const t_world *world, int depth);
 
-void	draw(t_world *world)
+void	draw(const t_world *world)
 {
 	t_hook_var	var;
 	t_img		img;
@@ -27,7 +30,7 @@ void	draw(t_world *world)
 		fprintf(stderr, "\rScanlines remaining: %d ", WINSIZE_Y - y - 1);
 		x = 0;
 		while (x < WINSIZE_X)
-			color_arr[yy + x] = accumulate_pixel_color(x, y, &world->camera, world->object_tree);
+			color_arr[yy + x] = accumulate_pixel_color(x, y, world);
 	}
 }
 
@@ -52,11 +55,36 @@ static t_color	accumulate_pixel_color(int x, int y, const t_world *world)
 	return (pixel_color);
 }
 
-t_color	ray_color(t_ray ray, const t_world *world, int depth)
+static t_color	ray_color(t_ray ray, const t_world *world, int depth)
 {
 	t_hit_record	rec;
+	t_range			init_range;
 
+	init_range = construct_range(HIT_T_MIN, INFINITY);
 	if (MAX_DEPTH <= depth)
 		return (construct_color(0, 0, 0));
-// 未実装!
+	if (world->object_tree == NULL \
+		&& check_bvh(world->object_tree, ray, &rec, init_range) == false)
+		return (world->back_ground);
+	t_ray			scattered;
+	t_color			attenuation;
+	t_color			emitted;
+
+	emitted = rec.mat_ptr->emitted(rec.mat_ptr, rec);
+	if (rec.mat_ptr->scatter(rec.mat_ptr, rec, &attenuation, &scattered) == false)
+		return (emitted);
+	if (RR_START_DEPTH < depth && killed_by_russian_roulette(&attenuation))
+		return (emitted);
+	return (add_vec(emitted, mul_vec(attenuation, ray_color(scattered, world, depth + 1))));
+}
+
+static bool	killed_by_russian_roulette(t_color *attenuation)
+{
+	double	live_prob;
+
+	live_prob = fmax(fmax(attenuation->x, attenuation->y), attenuation->z);
+	if (live_prob <= random_double(0, 1))
+		return (true);
+	*attenuation = scal_mul_vec(*attenuation, 1 / live_prob);
+	return (false);
 }

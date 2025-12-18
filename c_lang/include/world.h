@@ -7,6 +7,7 @@
 # include "libft.h"
 
 typedef struct s_world {
+	t_hit_table	hit_table;
 	t_camera	camera;
 	t_color		back_ground;
 	t_hit_node	*object_tree;
