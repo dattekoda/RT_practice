@@ -2,7 +2,7 @@
 #include "rt_utils.h"
 
 /*
-@brief 判別定数を計算する関数
+@brief 判別式を計算する関数
 */
 double calc_discriminant(t_abc abc)
 {

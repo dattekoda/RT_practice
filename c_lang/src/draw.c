@@ -9,20 +9,35 @@
 #include <stdio.h>
 #include <math.h>
 
+int				close_window(void *param);
+void			write_loop(void **mlx, t_img *img, t_color *color_arr);
+static void		pixel_color_loop(t_color *color_arr, const t_world *world);
 static t_color	accumulate_pixel_color(int x, int y, const t_world *world);
-static bool	killed_by_russian_roulette(t_color *attenuation);
+static bool		killed_by_russian_roulette(t_color *attenuation);
 static t_color	ray_color(t_ray ray, const t_world *world, int depth);
 
 void	draw(const t_world *world)
 {
 	t_hook_var	var;
 	t_img		img;
-	int			x;
-	int			y;
-	int			yy;
 	t_color		*color_arr = ft_calloc(WINSIZE_X * WINSIZE_Y, sizeof(t_color));
 
 	initialize(&var, &img);
+	pixel_color_loop(color_arr, world);
+	write_loop(&var.mlx, &img, color_arr);
+	fprintf(stderr, "\nDone.\n");
+	free(color_arr);
+	mlx_put_image_to_window(var.mlx, var.win, img.id, 0, 0);
+	mlx_hook(var.win, 17, 0L, close_window, &var);
+	mlx_loop(var.mlx);
+}
+
+static void	pixel_color_loop(t_color *color_arr, const t_world *world)
+{
+	int	x;
+	int	y;
+	int	yy;
+
 	y = 0;
 	while (y < WINSIZE_Y)
 	{
@@ -30,7 +45,11 @@ void	draw(const t_world *world)
 		fprintf(stderr, "\rScanlines remaining: %d ", WINSIZE_Y - y - 1);
 		x = 0;
 		while (x < WINSIZE_X)
+		{
 			color_arr[yy + x] = accumulate_pixel_color(x, y, world);
+			x++;
+		}
+		y++;
 	}
 }
 
@@ -44,7 +63,7 @@ static t_color	accumulate_pixel_color(int x, int y, const t_world *world)
 	t_ray				ray;
 
 	s = 0;
-	while (s < SAMPLES_PER_PIXEL)
+	while (s++ < SAMPLES_PER_PIXEL)
 	{
 		u = (x + random_double(0, 1)) / (WINSIZE_X - 1);
 		v = (y + random_double(0, 1)) / (WINSIZE_Y - 1);
@@ -64,10 +83,10 @@ static t_color	ray_color(t_ray ray, const t_world *world, int depth)
 	if (MAX_DEPTH <= depth)
 		return (construct_color(0, 0, 0));
 	if (world->object_tree == NULL \
-		&& check_bvh(world->object_tree, ray, &rec, init_range) == false)
+		|| check_bvh(world->object_tree, ray, &rec, init_range) == false)
 		return (world->back_ground);
 	t_ray			scattered;
-	t_color			attenuation;
+	t_color			attenuation; // 減衰
 	t_color			emitted;
 
 	emitted = rec.mat_ptr->emitted(rec.mat_ptr, rec);
@@ -87,4 +106,36 @@ static bool	killed_by_russian_roulette(t_color *attenuation)
 		return (true);
 	*attenuation = scal_mul_vec(*attenuation, 1 / live_prob);
 	return (false);
+}
+
+void	write_loop(void **mlx, t_img *img, t_color *color_arr)
+{
+	int		y;
+	int		x;
+	int		yy;
+	char	*dst;
+
+	y = 0;
+	while (y < WINSIZE_Y)
+	{
+		yy = y * WINSIZE_X;
+		x = 0;
+		while (x < WINSIZE_X)
+		{
+			dst = img->addr + (y * img->line_size + x * (img->bytes_per_pixels / 8));
+			write_color(*mlx, dst, color_arr[yy + x++]);
+		}
+		y++;
+	}
+}
+
+int	close_window(void *param)
+{
+	t_hook_var	*vars;
+
+	vars = (t_hook_var *)param;
+	if (vars->win)
+		mlx_destroy_window(vars->mlx, vars->win);
+	exit(0);
+	return (0);
 }

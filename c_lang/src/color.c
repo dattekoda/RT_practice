@@ -1,5 +1,6 @@
 #include "color.h"
 #include "rt_utils.h"
+#include "mlx.h"
 #include <stddef.h>
 #include <math.h>
 
@@ -13,6 +14,11 @@ int	get_raw_rgb(t_color pixel_color)
 	pixel_color = map_vec(pixel_color, &sqrt);
 	pixel_color = map_vec(pixel_color, &get_raw_rgb_clamp);
 	return ((int)pixel_color.x << 16 | (int)pixel_color.y << 8 | (int)pixel_color.z);
+}
+
+void	write_color(void *mlx, char *dst, t_color color)
+{
+	*(unsigned int*)dst = mlx_get_color_value(mlx, get_raw_rgb(color));
 }
 
 static double color_clamp(double x)
