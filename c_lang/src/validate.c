@@ -9,11 +9,6 @@ int	validate_sphere(char *line);
 
 static int	validate_distribute(char *line)
 {
-	static const char	*object_identifier[] = {
-		"sp",/*  "pl", "cy", */ NULL
-	};
-	size_t				i;
-
 	if (*line == 'A')
 		return (validate_ambient(line + 1));
 	if (*line == 'C')
@@ -29,8 +24,6 @@ static int	validate_distribute(char *line)
 // にするように要修正。
 int	validate(t_list *line_lst)
 {
-	char	*line_ptr;
-
 	while (line_lst)
 	{
 		if (validate_distribute(line_lst->content))

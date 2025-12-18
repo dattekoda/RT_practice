@@ -5,8 +5,11 @@
 #include <math.h>
 #include <stdlib.h>
 
-static bool	bounding_sphere(const t_sphere *self, t_range range, t_aabb *output_box)
+static bool	bounding_sphere(const void *s, t_range range, t_aabb *output_box)
 {
+	t_sphere	*self;
+
+	self = (t_sphere *)s;
 	(void)range;
 	*output_box = construct_aabb(sub_vec(self->center, constant_vec(self->radius)), \
 							add_vec(self->center, constant_vec(self->radius)));
