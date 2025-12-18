@@ -4,28 +4,13 @@
 #include "validate.h"
 #include "world.h"
 #include <stdio.h>
+#include <stdlib.h>
 
-typedef struct s_hook_var
-{
-	void	*mlx;
-	void	*win;
-}	t_hook_var;
-
-void	draw(void **mlx, t_img *img);
+void	draw(t_world *world);
 int		set_world(t_world *world, t_list *line_lst);
-
-// void	initialize(t_hook_var *var, t_img *img)
-// {
-// 	var->mlx = mlx_init();
-// 	var->win = mlx_new_window(var->mlx, WINSIZE_X, WINSIZE_Y, "miniRT");
-// 	construct_img(img, var->mlx);
-// 	return ;
-// }
 
 int	main(int argc, char *argv[])
 {
-	// t_hook_var	var;
-	// t_img		img;
 	t_list		*line_lst;
 	t_world		world;
 
@@ -37,7 +22,7 @@ int	main(int argc, char *argv[])
 		return (EXIT_FAILURE);
 	if (set_world(&world, line_lst))
 		return (EXIT_FAILURE);
-	// initialize(&var, &img);
-	// draw(&var.mlx, &img);
+	ft_lstclear(&line_lst, free);
+	draw(&world);
 	return (0);
 }

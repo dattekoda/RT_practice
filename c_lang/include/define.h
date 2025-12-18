@@ -9,4 +9,8 @@
 # endif
 
 # define ASPECT_RATIO 1.333333333
+
+# define MAX_DEPTH 30
+# define SAMPLES_PER_PIXEL 100
+
 #endif

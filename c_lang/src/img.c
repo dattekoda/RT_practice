@@ -13,3 +13,11 @@ void	construct_img(t_img *img, void *mlx)
 	);
 	img->bytes_per_pixels /= 8;
 }
+
+void	initialize(t_hook_var *var, t_img *img)
+{
+	var->mlx = mlx_init();
+	var->win = mlx_new_window(var->mlx, WINSIZE_X, WINSIZE_Y, "miniRT");
+	construct_img(img, var->mlx);
+	return ;
+}
