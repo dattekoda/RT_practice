@@ -1,7 +1,7 @@
 #include "sphere.h"
 #include "rt_utils.h"
 #include "discriminant.h"
-#include "t_range.h"
+#include "range.h"
 #include <math.h>
 #include <stdlib.h>
 
@@ -35,7 +35,7 @@ static bool	set_sphere_hitrec(const t_sphere *self, const t_ray ray, t_hit_recor
 	return (true);
 }
 
-static bool	hit_sphere(const void *s, const t_ray ray, t_hit_record *rec, t_t_range t_range)
+static bool	hit_sphere(const void *s, const t_ray ray, t_hit_record *rec, t_range t_range)
 {
 	const t_sphere	*self;
 	t_abc			abc;

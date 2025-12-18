@@ -14,7 +14,7 @@
 typedef struct s_hit_table
 {
 	bool		(*bounding_box)(const void *s, t_range range, t_aabb *output_box);
-	bool		(*hit)(const void *, const t_ray, t_hit_record *);
+	bool		(*hit)(const void *, const t_ray, t_hit_record *, t_range);
 	t_material	*mat_ptr;
 }	t_hit_table;
 

@@ -1,6 +1,7 @@
 #include "camera.h"
 #include "define.h"
 #include "onb.h"
+#include <math.h>
 
 static double	degrees_to_radians(const double degrees)
 {

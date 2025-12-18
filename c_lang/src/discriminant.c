@@ -1,4 +1,5 @@
 #include "discriminant.h"
+#include "rt_utils.h"
 
 /*
 @brief 判別定数を計算する関数

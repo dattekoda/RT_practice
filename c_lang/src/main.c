@@ -24,8 +24,8 @@ int		set_world(t_world *world, t_list *line_lst);
 
 int	main(int argc, char *argv[])
 {
-	t_hook_var	var;
-	t_img		img;
+	// t_hook_var	var;
+	// t_img		img;
 	t_list		*line_lst;
 	t_world		world;
 
