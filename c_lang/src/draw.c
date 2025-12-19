@@ -85,6 +85,7 @@ static t_color	ray_color(t_ray ray, const t_world *world, int depth)
 	if (world->object_tree == NULL \
 		|| check_bvh(world->object_tree, ray, &rec, init_range) == false)
 		return (world->back_ground);
+	fprintf(stderr, "hello\n");
 	t_ray			scattered;
 	t_color			attenuation; // 減衰
 	t_color			emitted;
@@ -122,7 +123,7 @@ void	write_loop(void **mlx, t_img *img, t_color *color_arr)
 		x = 0;
 		while (x < WINSIZE_X)
 		{
-			dst = img->addr + (y * img->line_size + x * (img->bytes_per_pixels / 8));
+			dst = img->addr + (y * img->line_size + x * img->bytes_per_pixels);
 			write_color(*mlx, dst, color_arr[yy + x++]);
 		}
 		y++;

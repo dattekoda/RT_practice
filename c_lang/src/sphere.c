@@ -5,6 +5,7 @@
 #include <math.h>
 #include <stdlib.h>
 
+#include <stdio.h>
 static bool	bounding_sphere(const void *s, t_range range, t_aabb *output_box)
 {
 	t_sphere	*self;
@@ -13,6 +14,10 @@ static bool	bounding_sphere(const void *s, t_range range, t_aabb *output_box)
 	(void)range;
 	*output_box = construct_aabb(sub_vec(self->center, constant_vec(self->radius)), \
 							add_vec(self->center, constant_vec(self->radius)));
+	// check_vec(output_box->min);
+	// check_vec(output_box->max);
+	// fprintf(stderr, "bounding: %f\n", self->radius);
+	// radiusが0になっていることを確認
 	return (true);
 }
 
@@ -47,6 +52,7 @@ static bool	hit_sphere(const void *s, const t_ray ray, t_hit_record *rec, t_rang
 	double			solution;
 
 	self = (const t_sphere *)s;
+	check_vec(self->center);
 	abc = calc_abc(self, ray);
 	discriminant = calc_discriminant(abc);
 	if (0 < discriminant)
@@ -70,6 +76,7 @@ t_sphere	construct_sphere(t_point3 _cen, double _rad, void *mat_ptr)
 	sphere.radius = _rad;
 	sphere.hit_table.mat_ptr = mat_ptr;
 	sphere.hit_table.hit = hit_sphere;
+	// fprintf(stderr, "construct: %f\n", sphere.radius);
 	sphere.hit_table.bounding_box = bounding_sphere;
 	return (sphere);
 }

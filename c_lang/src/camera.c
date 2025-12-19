@@ -24,10 +24,10 @@ t_camera	construct_camera(t_point3 _origin, t_vec3 _direct, double vfov)
 	double			screen_w = screen_h * ASPECT_RATIO;
 	t_onb			onb;
 
-	onb = construct_w_onb(negative_vec(_direct), construct_vec(0, 1, 0));
+	onb = construct_w_onb(negative_vec(_direct));
 	camera.origin = _origin;
-	camera.horizontal = scal_mul_vec(onb.u, screen_h);
-	camera.vertical = scal_mul_vec(onb.v, -screen_w);
+	camera.horizontal = scal_mul_vec(onb.u, screen_w);
+	camera.vertical = scal_mul_vec(onb.v, -screen_h);
 	camera.higher_left_corner = \
 	add_vec( \
 		sub_vec(\

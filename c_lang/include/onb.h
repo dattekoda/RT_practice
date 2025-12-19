@@ -17,6 +17,6 @@ typedef struct s_onb
 	t_vec3	w;
 }	t_onb;
 
-t_onb	construct_w_onb(t_vec3 _w, t_vec3 upper);
+t_onb	construct_w_onb(t_vec3 _w);
 
 #endif

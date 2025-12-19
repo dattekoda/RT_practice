@@ -28,6 +28,10 @@ t_vec3	random_unit_vector(void);
 
 t_vec3	get_vec(char **line);
 
+
+void	check_vec(t_vec3 vec);
+
+
 typedef t_vec3	t_point3;
 
 #endif

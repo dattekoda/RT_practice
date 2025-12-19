@@ -3,6 +3,8 @@
 #include "vec3.h"
 #include "rt_utils.h"
 
+#include <stdio.h>
+
 int	set_objects(t_hit_node **tree, t_list *line_lst);
 static char	*get_word_line(t_list *line_lst, const char *word);
 static t_camera	set_camera(t_list *line_lst);
@@ -50,7 +52,8 @@ static t_color	set_back_ground(t_list *line_lst)
 }
 
 /*
-@brief 先頭文字がwordの文字列を最後スペーススキップしたうえで返す関数
+@brief 先頭文字がwordの文字列を返す
+最後スペーススキップする
 */
 static char	*get_word_line(t_list *line_lst, const char *word)
 {

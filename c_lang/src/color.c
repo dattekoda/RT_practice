@@ -21,14 +21,14 @@ void	write_color(void *mlx, char *dst, t_color color)
 	*(unsigned int*)dst = mlx_get_color_value(mlx, get_raw_rgb(color));
 }
 
-static double color_clamp(double x)
+static double color_normalize(double x)
 {
-	return (clamp(x, 0.0f, 1.0f));
+	return (clamp(x, 0, 255) / 255);
 }
 
-t_color	construct_color(double r, double g, double b)
+t_color	construct_color(double _r, double _g, double _b)
 {
-	return (map_vec(construct_vec(r, g, b), &color_clamp));
+	return (map_vec(construct_vec(_r, _g, _b), &color_normalize));
 }
 
 // cc color.c rt_utils.c vec3.c -I ../include -lm

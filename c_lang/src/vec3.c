@@ -135,3 +135,12 @@ t_vec3	get_vec(char **line)
 	vec.z = ft_strtod(*line, line);
 	return (vec);
 }
+
+#include <stdio.h>
+/*
+@brief デバグ用でvecの中身を参照する関数
+*/
+void	check_vec(t_vec3 vec)
+{
+	fprintf(stderr, "(%.2f, %.2f, %.2f)\n",vec.x,vec.y,vec.z);
+}
