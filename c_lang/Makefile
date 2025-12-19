@@ -33,7 +33,7 @@ SRCFILES =	aabb.c \
 			validate_camera.c \
 			validate_sphere.c \
 			validate.c \
-			vec3.c
+			vec3.c print_world.c
 
 SRCS = $(addprefix $(SRCDIR)/, $(SRCFILES))
 

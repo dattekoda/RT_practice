@@ -30,9 +30,7 @@ t_bvh_info	construct_bvh_info(char *line)
 		return (info);
 	info.aabb = tmp_box;
 	// 重心は比較にしか使われないので0.5はかけない
-	info.centroid = construct_vec(tmp_box.min.x + tmp_box.max.x, \
-								tmp_box.min.y + tmp_box.max.y, \
-								tmp_box.min.z + tmp_box.max.z);
+	info.centroid = add_vec(tmp_box.min, tmp_box.max);
 	return (info);
 }
 
@@ -45,6 +43,8 @@ static void	swap_info(t_bvh_info *a, t_bvh_info *b)
 	*b = tmp;
 }
 
+void	print_bvh_info(t_bvh_info *info, int size);
+// ここを直せばいけるはず!!
 /*
 @brief t_bvh_infoをクイックソート
 */

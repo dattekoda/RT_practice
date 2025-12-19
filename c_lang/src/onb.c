@@ -10,7 +10,7 @@ t_onb	construct_w_onb(t_vec3 _w)
 	t_vec3	upper;
 
 	upper = construct_vec(0, 1, 0);
-	if (dot(upper, onb.w) < 0.001)
+	if (length_squared_vec(cross(upper, onb.w)) < 0.001)
 		upper = construct_vec(0, 0, 1);
 	onb.w = normalize(_w);
 	onb.u = cross(upper, onb.w);

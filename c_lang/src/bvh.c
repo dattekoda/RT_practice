@@ -4,6 +4,8 @@
 #include "libft.h"
 #include <stddef.h>
 
+#include <stdio.h>
+
 static t_hit_node	*add_new_node(t_bvh_info *object);
 static bool			box_x_compare(const t_bvh_info *a, const t_bvh_info *b);
 static bool			box_y_compare(const t_bvh_info *a, const t_bvh_info *b);

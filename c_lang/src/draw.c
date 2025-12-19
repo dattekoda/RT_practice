@@ -85,7 +85,6 @@ static t_color	ray_color(t_ray ray, const t_world *world, int depth)
 	if (world->object_tree == NULL \
 		|| check_bvh(world->object_tree, ray, &rec, init_range) == false)
 		return (world->back_ground);
-	fprintf(stderr, "hello\n");
 	t_ray			scattered;
 	t_color			attenuation; // 減衰
 	t_color			emitted;

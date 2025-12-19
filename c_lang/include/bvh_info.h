@@ -8,7 +8,7 @@
 
 /*
 @brief bvhを構築するための準備構造体
-@param centroid 重心
+@param centroid 重心,bvh比較用
 @param have_aabb aabbを持っているか否か
 */
 typedef struct s_bvh_info

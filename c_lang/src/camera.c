@@ -10,6 +10,7 @@ static double	degrees_to_radians(const double degrees)
 	deno = 1.0f / 180.0f;
 	return (degrees * M_PI * deno);
 }
+#include <stdlib.h>
 
 /*
 @param _direct 向きベクトル, 正規化不要

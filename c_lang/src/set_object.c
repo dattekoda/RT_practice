@@ -9,6 +9,8 @@
 
 #include "ray.h"
 #include <stdio.h>
+void	print_bvh_info(t_bvh_info *info, int size);
+
 
 static bool		is_object(char *line);
 static size_t	count_object_num(t_list *line_ptr);
@@ -46,6 +48,7 @@ int	set_objects(t_hit_node **tree, t_list *line_lst)
 		line_lst = line_lst->next;
 	}
 	*tree = construct_bvh(object_array, 0, array_size);
+	// print_bvh_info(object_array, 3);
 	// checker_tree(*tree);
 	// exit(1);
 	return (EXIT_SUCCESS);

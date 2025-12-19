@@ -52,7 +52,6 @@ static bool	hit_sphere(const void *s, const t_ray ray, t_hit_record *rec, t_rang
 	double			solution;
 
 	self = (const t_sphere *)s;
-	check_vec(self->center);
 	abc = calc_abc(self, ray);
 	discriminant = calc_discriminant(abc);
 	if (0 < discriminant)

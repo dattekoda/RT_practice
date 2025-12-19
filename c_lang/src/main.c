@@ -9,6 +9,8 @@
 void	draw(t_world *world);
 int		set_world(t_world *world, t_list *line_lst);
 
+
+void	print_world(const t_world *world);
 int	main(int argc, char *argv[])
 {
 	t_list		*line_lst;
@@ -22,6 +24,7 @@ int	main(int argc, char *argv[])
 		return (EXIT_FAILURE);
 	if (set_world(&world, line_lst))
 		return (EXIT_FAILURE);
+	// print_world(&world);
 	ft_lstclear(&line_lst, free);
 	draw(&world);
 	return (0);
