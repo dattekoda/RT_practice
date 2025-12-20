@@ -47,7 +47,7 @@ int	set_objects(t_hit_node **tree, t_list *line_lst)
 			object_array[array_size++] = construct_bvh_info(line_lst->content);
 		line_lst = line_lst->next;
 	}
-	*tree = construct_bvh(object_array, 0, array_size);
+	*tree = construct_bvh(object_array, 0, array_size - 1);
 	// print_bvh_info(object_array, 3);
 	// checker_tree(*tree);
 	// exit(1);

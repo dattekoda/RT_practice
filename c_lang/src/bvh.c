@@ -13,7 +13,7 @@ static bool			box_z_compare(const t_bvh_info *a, const t_bvh_info *b);
 
 t_hit_node	*construct_bvh(t_bvh_info *objects, size_t start, size_t end)
 {
-	int			axis = random_int(0, 2);
+	int			axis = 0/* random_int(0, 2) */;
 	bool		(*comparator)(const t_bvh_info *, const t_bvh_info *);
 	t_hit_node	*node;
 
@@ -27,11 +27,11 @@ t_hit_node	*construct_bvh(t_bvh_info *objects, size_t start, size_t end)
 	else
 		comparator = box_z_compare;
 	size_t	object_span = end - start;
-	if (object_span == 1) {
+	if (object_span == 0) {
 		node->data = objects[start].data;
 		node->box = objects[start].aabb;
 		return (node);
-	} else if (object_span == 2) {
+	} else if (object_span == 1) {
 		if (comparator(&objects[start], &objects[start+1])) {
 			node->lhs = add_new_node(&objects[start]);
 			node->rhs = add_new_node(&objects[start + 1]);
